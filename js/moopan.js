@@ -1,6 +1,7 @@
 /* ElementMoopanExtensions by Martyn Eggleton (martyn[dot]eggleton[at]gmail[dot]com) 01/11/2008 */
 	
 Element.implement({
+  aDeadZone: null,
 	moopan: function(options) {
     var div = this;
     
@@ -18,10 +19,20 @@ Element.implement({
       this.scrollTo(0);
       this.originalCoord = [this.getCoordinates(false).left, this.getCoordinates(false).top];
       this.scrollTo(this.getScrollSize().x * this.options.fStartProportion[0], this.getScrollSize().y * this.options.fStartProportion[1]);
-      this.oCords = this.getCoordinates(false);
+      
+      this.calcPanPositions()
       this.addEvent('mouseover', this.overListener);
     }
 	  return div;
+  },
+  
+  calcPanPositions: function()
+  { 
+    this.oCords = this.getCoordinates(false);
+    this.aDeadZone = [[(this.oCords.width / 2) * (1 - this.options.fDeadZone[0]),
+                      (this.oCords.width / 2) * (1 + this.options.fDeadZone[0])],
+                     [(this.oCords.height / 2) * (1 - this.options.fDeadZone[1]),
+                      (this.oCords.height / 2) * (1 + this.options.fDeadZone[1])]];
   },
   
   moveListener: function(event){
@@ -49,49 +60,34 @@ Element.implement({
     var aCurrScroll = this.getScroll();
     this.scrollTo(this.iSpeed[0] + aCurrScroll.x, this.iSpeed[1] + aCurrScroll.y);
   },
+  
+  
 
   /*I think i have the maths right here but bascially use can use any calculaion that will 
   get you from mouse position to a suitable number of pixels to change per frame
   this one includes a deadzone where nothing happens*/
   getSpeed: function(event){
     var aScroll = this.getScrollSize();
+    var aRelMousePos = [  (event.page.x - this.originalCoord[0]),
+                          (event.page.y - this.originalCoord[1])];
     
-    var aRelativePos = [  (event.page.x - this.originalCoord[0]) - (this.oCords.width / 2),
-                          (event.page.y - this.originalCoord[1]) - (this.oCords.height / 2)];
-    //console.log("aRelativePos =", aRelativePos);
-    var aDir = [  aRelativePos[0] / Math.abs(aRelativePos[0]),
-                  aRelativePos[1] / Math.abs(aRelativePos[1])];
-    //console.log("aDir =", aDir);
-    var aProp = [ 
-                  Math.max(0, (Math.abs(aRelativePos[0]) - (this.options.fDeadZone[0] * this.oCords.width / 2))) / ((1 - this.options.fDeadZone[0]) * (this.oCords.width / 2)),
-                  Math.max(0, (Math.abs(aRelativePos[1]) - (this.options.fDeadZone[1] * this.oCords.height / 2))) / ((1 - this.options.fDeadZone[1]) * (this.oCords.height / 2))];
-    //console.log("aProp =", aProp);
-    if(isNaN(aProp[0])) 
-    {
-      aProp[0] = 0; 
-    }
-    if(isNaN(aProp[1]))
-    {
-      aProp[1] = 0;
-    }
+    var aSpeed = [                                                   
+                  ((aRelMousePos[0] < this.aDeadZone[0][0])?
+                    ((aRelMousePos[0] - this.aDeadZone[0][0]) /  this.aDeadZone[0][0]):
+                    ((aRelMousePos[0] > this.aDeadZone[0][1])?
+                      ((aRelMousePos[0] - this.aDeadZone[0][1]) /  (this.oCords.width - this.aDeadZone[0][1])):
+                      0)
+                  ) * aScroll.x / (this.options.iFPS * this.options.iSecondsAtTopSpeed[0])
+                  , 
+                  ((aRelMousePos[1] < this.aDeadZone[1][0])?
+                    ((aRelMousePos[1] - this.aDeadZone[1][0]) /  this.aDeadZone[1][0]):
+                    ((aRelMousePos[1] > this.aDeadZone[1][1])?
+                      ((aRelMousePos[1] - this.aDeadZone[1][1]) /  (this.oCords.height - this.aDeadZone[1][1])):
+                      0)
+                  ) * aScroll.y / (this.options.iFPS * this.options.iSecondsAtTopSpeed[1])];
     
-    var aSpeed = [(aScroll.x * aProp[0] * aDir[0]) / (2 * this.options.iFPS * this.options.iSecondsAtTopSpeed[0]),
-                  (aScroll.y * aProp[1] * aDir[1]) / (2 * this.options.iFPS * this.options.iSecondsAtTopSpeed[1])];
-    
-    if(isNaN(aSpeed[0])) 
-    {
-      aSpeed[0] = 0; 
-    }
-    if(isNaN(aSpeed[1]))
-    {
-      aSpeed[1] = 0;
-    }              
-                  
-    //console.log("aSpeed =", aSpeed);
     return aSpeed;
-    
   }
-      
 });
 	
 // AUTOLOAD CODE BLOCK (MAY BE CHANGED OR REMOVED)

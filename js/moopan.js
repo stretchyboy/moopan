@@ -4,14 +4,12 @@ Element.implement({
   aDeadZone: null,
 	moopan: function(options) {
     var div = this;
-    
 		if (div.get("tag") == "div") {
-      
-			options = $extend({ 
+			options = $extend({
 				fStartProportion: [0, 0], //The start position from 0 -1  [X, Y]
         iFPS: 16, //Frames per second
         iSecondsAtTopSpeed: [2, 2], // how long from one extreme to the other at full speed [X, Y]
-        fDeadZone: [0.3, 0.3], // the size of the central dead zone 0  = no dead zone 1 turns off scrolling for that direction [X, Y]
+        fDeadZone: [0.3, 0.3] // the size of the central dead zone 0  = no dead zone 1 turns off scrolling for that direction [X, Y]
 			}, options);
       
       this.options = options;
@@ -19,8 +17,7 @@ Element.implement({
       this.scrollTo(0);
       this.originalCoord = [this.getCoordinates(false).left, this.getCoordinates(false).top];
       this.scrollTo(this.getScrollSize().x * this.options.fStartProportion[0], this.getScrollSize().y * this.options.fStartProportion[1]);
-      
-      this.calcPanPositions()
+      this.calcPanPositions();
       this.addEvent('mouseover', this.overListener);
     }
 	  return div;
@@ -77,8 +74,7 @@ Element.implement({
                     ((aRelMousePos[0] > this.aDeadZone[0][1])?
                       ((aRelMousePos[0] - this.aDeadZone[0][1]) /  (this.oCords.width - this.aDeadZone[0][1])):
                       0)
-                  ) * aScroll.x / (this.options.iFPS * this.options.iSecondsAtTopSpeed[0])
-                  , 
+                  ) * aScroll.x / (this.options.iFPS * this.options.iSecondsAtTopSpeed[0]),
                   ((aRelMousePos[1] < this.aDeadZone[1][0])?
                     ((aRelMousePos[1] - this.aDeadZone[1][0]) /  this.aDeadZone[1][0]):
                     ((aRelMousePos[1] > this.aDeadZone[1][1])?
